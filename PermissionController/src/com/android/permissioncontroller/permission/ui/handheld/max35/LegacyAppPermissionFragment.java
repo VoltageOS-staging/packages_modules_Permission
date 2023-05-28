@@ -49,6 +49,7 @@ import android.app.role.RoleManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.GosPackageState;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -60,6 +61,7 @@ import android.util.ArrayMap;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
@@ -83,6 +85,8 @@ import com.android.permissioncontroller.permission.data.FullStoragePermissionApp
 import com.android.permissioncontroller.permission.ui.GrantPermissionsViewHandler;
 import com.android.permissioncontroller.permission.ui.handheld.AllAppPermissionsFragment;
 import com.android.permissioncontroller.permission.ui.handheld.AppPermissionGroupsFragment;
+import com.android.permissioncontroller.permission.ui.handheld.ExtraPermissionLink;
+import com.android.permissioncontroller.permission.ui.handheld.ExtraPermissionLinkKt;
 import com.android.permissioncontroller.permission.ui.handheld.PermissionAppsFragment;
 import com.android.permissioncontroller.permission.ui.handheld.SettingsWithLargeHeader;
 import com.android.permissioncontroller.permission.ui.model.AppPermissionViewModel;
@@ -493,6 +497,22 @@ public class LegacyAppPermissionFragment extends SettingsWithLargeHeader
         if (mViewModel.getFullStorageStateLiveData().isInitialized()) {
             setSpecialStorageState(mViewModel.getFullStorageStateLiveData().getValue());
         }
+
+        setupExtraViews();
+
+        {
+            Context ctx = requireContext();
+            var epl = ExtraPermissionLinkKt.getExtraPermissionLink(ctx, mPackageName, mPermGroupName);
+            if (epl != null && epl.isAllowPermissionSettingsButtonBlocked(ctx, mPackageName)) {
+                mAllowButton.setOnTouchListener((v, ev) -> {
+                    if (ev.getAction() == MotionEvent.ACTION_UP) {
+                        epl.onAllowPermissionSettingsButtonClick(ctx, mPackageName);
+                    }
+                    return true;
+                });
+                return;
+            }
+        }
     }
 
     private void allowButtonFrameClickListener() {
@@ -754,6 +774,53 @@ public class LegacyAppPermissionFragment extends SettingsWithLargeHeader
             b.setTitle(args.getTitleId());
         }
         b.show();
+    }
+
+    private CharSequence mOrigDenyButtonText;
+
+    private void setupExtraViews() {
+        View rootView = getView();
+        if (rootView == null) {
+            return;
+        }
+
+        if (!mDenyButton.isEnabled()) {
+            return;
+        }
+
+        ExtraPermissionLink link = ExtraPermissionLinkKt.getExtraPermissionLink(requireContext(),
+                mPackageName, mPermGroupName);
+
+        if (link == null) {
+            return;
+        }
+
+        Context ctx = requireContext();
+
+        String packageName = mPackageName;
+        GosPackageState packageState = GosPackageState.get(packageName);
+
+        String denyItemSuffix = link.getSettingsDeniedRadioButtonSuffix(ctx, packageName, packageState);
+
+        if (denyItemSuffix != null) {
+            if (mOrigDenyButtonText == null) {
+                mOrigDenyButtonText = mDenyButton.getText();
+            }
+            mDenyButton.setText(mOrigDenyButtonText + denyItemSuffix);
+        } else {
+            if (mOrigDenyButtonText != null) {
+                mDenyButton.setText(mOrigDenyButtonText);
+            }
+        }
+
+        ViewGroup layout = rootView.requireViewById(R.id.layout_app_permission_extra_views);
+
+        TextView view = layout.requireViewById(R.id.app_permission_extra_link_1);
+
+        view.setText(link.getSettingsLinkText(ctx, packageName, packageState));
+        view.setOnClickListener(v -> link.onSettingsLinkClick(this, packageName, packageState));
+
+        layout.setVisibility(View.VISIBLE);
     }
 }
 // LINT.ThenChange(../v36/AppPermissionFragment.java)
