@@ -500,26 +500,19 @@ public class LegacyAppPermissionFragment extends SettingsWithLargeHeader
         }
 
         setupExtraViews();
-
-        {
-            Context ctx = requireContext();
-            var epl = ExtraPermissionLinkKt.getExtraPermissionLink(ctx, mPackageName, mPermGroupName);
-            if (epl != null && epl.isAllowPermissionSettingsButtonBlocked(ctx, mPackageName)) {
-                mAllowButton.setOnTouchListener((v, ev) -> {
-                    if (ev.getAction() == MotionEvent.ACTION_UP) {
-                        epl.onAllowPermissionSettingsButtonClick(ctx, mPackageName);
-                    }
-                    return true;
-                });
-                return;
-            }
-        }
     }
 
     private void allowButtonFrameClickListener() {
         if (!mAllowButton.isEnabled()) {
             mViewModel.handleDisabledAllowButton(this);
         } else {
+            Context ctx = requireContext();
+            var epl = ExtraPermissionLinkKt.getExtraPermissionLink(ctx, mPackageName, mPermGroupName);
+            if (epl != null && epl.isAllowPermissionSettingsButtonBlocked(ctx, mPackageName)) {
+                epl.onAllowPermissionSettingsButtonClick(ctx, mPackageName);
+                return;
+            }
+
             markSingleButtonAsChecked(ButtonType.ALLOW);
             mViewModel.requestChange(false, this, this, ChangeRequest.GRANT_FOREGROUND,
                     APP_PERMISSION_FRAGMENT_ACTION_REPORTED__BUTTON_PRESSED__ALLOW);
