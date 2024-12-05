@@ -5,6 +5,7 @@
     <string name="cscopes_enable">Enable Contact Scopes</string>
     <string name="cscopes_toast_all_contacts_permissions_denied">Contacts permission is now denied</string>
     <string name="cscopes_turn_off">Turn off</string>
+    <string name="cscopes_turn_off_confirmation">Turn off Contact Scopes? All added scopes will be removed.</string>
 
     <string name="cscopes_btn_add_label">Label</string>
     <string name="cscopes_btn_add_contact">Contact</string>

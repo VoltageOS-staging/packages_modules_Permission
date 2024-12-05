@@ -453,7 +453,8 @@ class ContactScopesFragment : PackageExtraConfigFragment(), MenuProvider {
 
     override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
         if (mainSwitch.parent == null) {
-            addMenuItem(R.string.cscopes_turn_off, menu)
+            val item = addMenuItem(R.string.cscopes_turn_off, menu)
+            item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
         }
 
         addMenuItem(R.string.cscopes_settings, menu)
@@ -461,8 +462,22 @@ class ContactScopesFragment : PackageExtraConfigFragment(), MenuProvider {
 
     override fun onMenuItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.string.cscopes_turn_off ->
-                setContactScopesEnabled(false)
+            R.string.cscopes_turn_off -> {
+                val packageState = getGosPackageStateOrPressBack() ?: return true
+                val css = ContactScopesStorage.deserialize(packageState)
+                if (css.count == 0) {
+                    setContactScopesEnabled(false)
+                } else {
+                    AlertDialog.Builder(context_).run {
+                        setMessage(R.string.cscopes_turn_off_confirmation)
+                        setPositiveButton(R.string.cscopes_turn_off) { _, _ ->
+                            setContactScopesEnabled(false)
+                            requireActivity().invalidateOptionsMenu()
+                        }
+                        show()
+                    }
+                }
+            }
 
             R.string.cscopes_settings -> {
                 AlertDialog.Builder(context_).run {
