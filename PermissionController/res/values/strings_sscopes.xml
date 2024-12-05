@@ -39,4 +39,6 @@ are effectively parts of one app. State of Storage Scopes is shared among them, 
     </string>
 
     <string name="sscopes_storage_permissions_revoked">All storage permissions are now denied</string>
+
+    <string name="sscopes_turn_off_confirmation">Turn off Storage Scopes? All added scopes will be removed.</string>
 </resources>

@@ -17,6 +17,7 @@
 package com.android.permissioncontroller.sscopes;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.StorageScope;
 import android.app.compat.gms.GmsCompat;
 import android.content.ClipData;
@@ -475,6 +476,7 @@ public final class StorageScopesFragment extends PackageExtraConfigFragment {
 
         if (storageScopesEnabled(pkgName)) {
             menuItemTurnOff = menu.add(R.string.scopes_menu_item_turn_off);
+            menuItemTurnOff.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
         }
     }
 
@@ -483,7 +485,17 @@ public final class StorageScopesFragment extends PackageExtraConfigFragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (menuItemTurnOff == item) {
-            setEnabled(false);
+            if (getStorageScopes(pkgName).length == 0) {
+                setEnabled(false);
+            } else {
+                var b = new AlertDialog.Builder(context);
+                b.setMessage(R.string.sscopes_turn_off_confirmation);
+                b.setPositiveButton(R.string.scopes_menu_item_turn_off, (v, which) -> {
+                    setEnabled(false);
+                    requireActivity().invalidateOptionsMenu();
+                });
+                b.show();
+            }
             return true;
         }
 
